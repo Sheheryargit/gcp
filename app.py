@@ -1,15 +1,15 @@
 import streamlit as st
-import pandas as pd
-from datetime import datetime, timedelta
 from event_card import event_card
 from risk_card import risk_card
 from chat_ui import chat_ui
 from email_modal import email_modal, generate_email_content
+from news_api import fetch_supply_chain_news
+from datetime import datetime
 
-# Page configuration
+# Page config
 st.set_page_config(
-    page_title="Supply Chain Risk Intelligence Dashboard",
-    page_icon="��",
+    page_title="Supply Chain Risk Intelligence",
+    page_icon="🌐",
     layout="wide",
     initial_sidebar_state="collapsed"
 )
@@ -114,64 +114,45 @@ st.markdown("""
 # Create three columns for the layout
 left_col, middle_col, right_col = st.columns(3)
 
-# Sample data for events
-events = [
-    {
-        "title": "Port Congestion in Shanghai",
-        "summary": "Major delays reported at Shanghai port with container dwell times increasing by 50%. Impacting vessel schedules across Asia-Pacific routes.",
-        "tags": ["Logistics", "Asia", "High Risk"],
-        "date": "2024-04-06 • 2h ago"
-    },
-    {
-        "title": "New Trade Regulations in EU",
-        "summary": "European Union announces stricter environmental regulations for maritime shipping, affecting cargo vessels entering EU ports.",
-        "tags": ["Regulatory", "Europe", "Medium Risk"],
-        "date": "2024-04-06 • 4h ago"
-    },
-    {
-        "title": "Labor Strike in Rotterdam",
-        "summary": "Dock workers union announces 48-hour strike at Port of Rotterdam. Expected to cause significant delays in cargo handling.",
-        "tags": ["Labor", "Europe", "High Risk"],
-        "date": "2024-04-06 • 6h ago"
-    }
-]
-
-# Sample data for risk insights
-risk_insights = [
-    {
-        "event": "Supply Chain Delay Risk",
-        "affected_entity": "Asia-Pacific Shipping Routes",
-        "impact_level": "High",
-        "recommendation": "Activate alternative shipping routes through Singapore. Consider air freight for high-priority cargo."
-    },
-    {
-        "event": "Cost Impact Analysis",
-        "affected_entity": "European Operations",
-        "impact_level": "Medium",
-        "recommendation": "Review and adjust Q2 logistics budget. Consider long-term contracts to stabilize costs."
-    },
-    {
-        "event": "Inventory Risk Assessment",
-        "affected_entity": "Regional Distribution Centers",
-        "impact_level": "Low",
-        "recommendation": "Maintain current inventory levels. Review safety stock calculations in Q3."
-    }
-]
-
 # Left column - Event Feed
 with left_col:
     st.markdown('<div class="section-header">Latest Global Events</div>', unsafe_allow_html=True)
-    for event in events:
+    # Fetch real news articles
+    news_articles = fetch_supply_chain_news(days_back=2)
+    for article in news_articles:
         event_card(
-            title=event["title"],
-            summary=event["summary"],
-            tags=event["tags"],
-            date=event["date"]
+            title=article['title'],
+            summary=article['description'],
+            tags=article['relevance_tags'],
+            date=article['published_at'],
+            source=article['source'],
+            url=article['url']
         )
 
 # Middle column - Risk Insights
 with middle_col:
     st.markdown('<div class="section-header">Supply Chain Risk Insights</div>', unsafe_allow_html=True)
+    risk_insights = [
+        {
+            "event": "Port Congestion in Asia",
+            "affected_entity": "Maritime Shipping Routes",
+            "impact_level": "High",
+            "recommendation": "Consider alternative routes through less congested ports or air freight options for critical shipments."
+        },
+        {
+            "event": "Semiconductor Shortage",
+            "affected_entity": "Electronics Manufacturing",
+            "impact_level": "Medium",
+            "recommendation": "Diversify supplier base and increase safety stock levels for critical components."
+        },
+        {
+            "event": "Weather Disruption",
+            "affected_entity": "Ground Transportation",
+            "impact_level": "Low",
+            "recommendation": "Monitor weather patterns and prepare alternative delivery routes."
+        }
+    ]
+    
     for risk in risk_insights:
         risk_card(
             event=risk["event"],
@@ -190,13 +171,11 @@ with right_col:
 
 # Show email modal if button was clicked
 if st.session_state.show_email_modal:
-    email_content = generate_email_content(risk_insights)
-    should_close = email_modal(email_content)
-    if should_close:
-        st.session_state.show_email_modal = False
-        st.rerun()
+    email_modal(generate_email_content(risk_insights))
 
 # Footer
-st.markdown('<div class="footer">', unsafe_allow_html=True)
-st.markdown(f"Last updated: {datetime.now().strftime('%B %d, %Y %H:%M:%S')}")
-st.markdown('</div>', unsafe_allow_html=True) 
+st.markdown(f"""
+    <div class="footer">
+        Last updated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+    </div>
+""", unsafe_allow_html=True) 

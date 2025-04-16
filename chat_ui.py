@@ -70,8 +70,8 @@ def chat_ui():
         """, unsafe_allow_html=True)
 
     # Initialize session state for messages if not exists
-    if 'chat_messages' not in st.session_state:
-        st.session_state.chat_messages = []
+    if 'messages' not in st.session_state:
+        st.session_state.messages = []
     
     if 'is_typing' not in st.session_state:
         st.session_state.is_typing = False
@@ -83,14 +83,9 @@ def chat_ui():
     st.markdown('<div class="message-container">', unsafe_allow_html=True)
     
     # Display messages
-    for msg in st.session_state.chat_messages:
-        message_class = "user-message" if msg["role"] == "user" else "assistant-message"
-        st.markdown(f"""
-            <div class="message {message_class}">
-                {msg["content"]}
-                <div class="message-time">{msg["time"]}</div>
-            </div>
-        """, unsafe_allow_html=True)
+    for message in st.session_state.messages:
+        with st.chat_message(message["role"]):
+            st.markdown(message["content"])
     
     # Show typing indicator if AI is "thinking"
     if st.session_state.is_typing:
@@ -108,24 +103,21 @@ def chat_ui():
     with st.container():
         col1, col2 = st.columns([8, 2])
         with col1:
-            user_input = st.text_input("", placeholder="Type your message here...", key="chat_input", label_visibility="collapsed")
+            prompt = st.chat_input("Ask about supply chain risks...", key="chat_input", label_visibility="collapsed")
         with col2:
             send_button = st.button("Send", type="primary", use_container_width=True)
 
     st.markdown('</div>', unsafe_allow_html=True)  # Close chat-container
 
     # Handle send button click
-    if send_button and user_input:
-        # Add user message
+    if send_button and prompt:
+        # Add user message to chat history
         current_time = time.strftime("%H:%M")
-        st.session_state.chat_messages.append({
-            "role": "user",
-            "content": user_input,
-            "time": current_time
-        })
+        st.session_state.messages.append({"role": "user", "content": prompt, "time": current_time})
         
-        # Clear input
-        st.session_state.chat_input = ""
+        # Display user message
+        with st.chat_message("user"):
+            st.markdown(prompt)
         
         # Simulate AI thinking
         st.session_state.is_typing = True
@@ -138,12 +130,8 @@ def chat_ui():
         
         # Generate AI response
         current_time = time.strftime("%H:%M")
-        response = generate_ai_response(user_input)
-        st.session_state.chat_messages.append({
-            "role": "assistant",
-            "content": response,
-            "time": current_time
-        })
+        response = generate_ai_response(prompt)
+        st.session_state.messages.append({"role": "assistant", "content": response, "time": current_time})
         
         # Reset typing indicator
         st.session_state.is_typing = False
