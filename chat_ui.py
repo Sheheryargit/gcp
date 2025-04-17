@@ -103,7 +103,7 @@ def chat_ui():
     with st.container():
         col1, col2 = st.columns([8, 2])
         with col1:
-            prompt = st.chat_input("Ask about supply chain risks...", key="chat_input", label_visibility="collapsed")
+            prompt = st.chat_input("Ask about supply chain risks...", key="chat_input")
         with col2:
             send_button = st.button("Send", type="primary", use_container_width=True)
 

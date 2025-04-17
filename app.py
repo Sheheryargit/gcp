@@ -1,10 +1,11 @@
 import streamlit as st
+import pandas as pd
+from datetime import datetime
 from event_card import event_card
 from risk_card import risk_card
 from chat_ui import chat_ui
 from email_modal import email_modal, generate_email_content
 from news_api import fetch_supply_chain_news
-from datetime import datetime
 
 # Page config
 st.set_page_config(
@@ -18,164 +19,153 @@ st.set_page_config(
 st.markdown("""
     <style>
     /* Main container styling */
-    .main {
+    .main-container {
         padding: 2rem;
+        background: #f8f9fa;
     }
     
     /* Header styling */
-    .stTitle {
-        font-size: 2.5rem !important;
-        font-weight: 600 !important;
-        color: #1a1a1a !important;
-        margin-bottom: 0.5rem !important;
+    .header {
+        margin-bottom: 2rem;
+    }
+    
+    /* Title styling */
+    .title {
+        color: #1a1a1a;
+        font-size: 2.2rem;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
     }
     
     /* Subtitle styling */
     .subtitle {
-        font-size: 1.1rem;
         color: #666;
-        margin-bottom: 2rem;
-        padding-bottom: 1rem;
-        border-bottom: 1px solid #eee;
+        font-size: 1.1rem;
+        font-weight: 400;
     }
     
     /* Stats container */
     .stats-container {
-        display: flex;
-        gap: 1rem;
-        margin-bottom: 2rem;
-        padding: 1rem;
         background: white;
-        border-radius: 8px;
+        padding: 1.5rem;
+        border-radius: 10px;
         box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        margin-bottom: 2rem;
     }
     
-    /* Section headers */
-    .section-header {
-        font-size: 1.2rem;
-        font-weight: 600;
+    /* Section title styling */
+    .section-title {
         color: #2c3e50;
+        font-size: 1.3rem;
+        font-weight: 500;
         margin-bottom: 1rem;
-        padding-bottom: 0.5rem;
-        border-bottom: 2px solid #0066cc;
     }
     
     /* Footer styling */
     .footer {
         margin-top: 2rem;
-        padding-top: 1rem;
-        border-top: 1px solid #eee;
         color: #666;
         font-size: 0.9rem;
-    }
-    
-    /* Button styling */
-    .stButton button {
-        font-weight: 500 !important;
-        border-radius: 6px !important;
-        transition: all 0.2s ease !important;
-    }
-    .stButton button:hover {
-        transform: translateY(-1px) !important;
+        text-align: center;
     }
     </style>
 """, unsafe_allow_html=True)
 
-# Initialize session state for modal
+# Initialize session state for email modal
 if 'show_email_modal' not in st.session_state:
     st.session_state.show_email_modal = False
 
-# Title and subtitle
-st.title("Supply Chain Risk Intelligence Dashboard")
-st.markdown('<p class="subtitle">Powered by Agentic AI | Real-Time Global Disruption Monitoring</p>', unsafe_allow_html=True)
+# Main container
+st.markdown('<div class="main-container">', unsafe_allow_html=True)
 
-# Quick stats
-st.markdown("""
-    <div class="stats-container">
-        <div style="flex: 1; text-align: center;">
-            <div style="font-size: 2rem; font-weight: 600; color: #dc3545;">3</div>
-            <div style="color: #666;">High Risk Events</div>
-        </div>
-        <div style="flex: 1; text-align: center;">
-            <div style="font-size: 2rem; font-weight: 600; color: #ffc107;">5</div>
-            <div style="color: #666;">Active Alerts</div>
-        </div>
-        <div style="flex: 1; text-align: center;">
-            <div style="font-size: 2rem; font-weight: 600; color: #28a745;">89%</div>
-            <div style="color: #666;">Route Efficiency</div>
-        </div>
-        <div style="flex: 1; text-align: center;">
-            <div style="font-size: 2rem; font-weight: 600; color: #0066cc;">24</div>
-            <div style="color: #666;">Monitored Routes</div>
-        </div>
-    </div>
-""", unsafe_allow_html=True)
+# Header
+st.markdown('<div class="header">', unsafe_allow_html=True)
+st.markdown('<h1 class="title">Supply Chain Risk Intelligence</h1>', unsafe_allow_html=True)
+st.markdown('<p class="subtitle">Real-time monitoring and analysis of global supply chain risks</p>', unsafe_allow_html=True)
+st.markdown('</div>', unsafe_allow_html=True)
 
-# Create three columns for the layout
-left_col, middle_col, right_col = st.columns(3)
+# Stats Container
+st.markdown('<div class="stats-container">', unsafe_allow_html=True)
+col1, col2, col3, col4 = st.columns(4)
+with col1:
+    st.metric("Active Risks", "12", "+2")
+with col2:
+    st.metric("Risk Score", "6.8", "-0.5")
+with col3:
+    st.metric("Affected Regions", "8", "+1")
+with col4:
+    st.metric("Critical Events", "3", "+1")
+st.markdown('</div>', unsafe_allow_html=True)
 
-# Left column - Event Feed
-with left_col:
-    st.markdown('<div class="section-header">Latest Global Events</div>', unsafe_allow_html=True)
-    # Fetch real news articles
-    news_articles = fetch_supply_chain_news(days_back=2)
-    for article in news_articles:
+# Main content columns
+col1, col2, col3 = st.columns([1, 1, 1])
+
+# Global Events Column
+with col1:
+    st.markdown('<h2 class="section-title">Global Events</h2>', unsafe_allow_html=True)
+    news_items = fetch_supply_chain_news(days_back=2)
+    for news in news_items:
         event_card(
-            title=article['title'],
-            summary=article['description'],
-            tags=article['relevance_tags'],
-            date=article['published_at'],
-            source=article['source'],
-            url=article['url']
+            title=news['title'],
+            summary=news['description'],
+            tags=news['relevance_tags'],
+            date=news['published_at'],
+            source=news['source'],
+            url=news['url']
         )
 
-# Middle column - Risk Insights
-with middle_col:
-    st.markdown('<div class="section-header">Supply Chain Risk Insights</div>', unsafe_allow_html=True)
-    risk_insights = [
-        {
-            "event": "Port Congestion in Asia",
-            "affected_entity": "Maritime Shipping Routes",
-            "impact_level": "High",
-            "recommendation": "Consider alternative routes through less congested ports or air freight options for critical shipments."
-        },
-        {
-            "event": "Semiconductor Shortage",
-            "affected_entity": "Electronics Manufacturing",
-            "impact_level": "Medium",
-            "recommendation": "Diversify supplier base and increase safety stock levels for critical components."
-        },
-        {
-            "event": "Weather Disruption",
-            "affected_entity": "Ground Transportation",
-            "impact_level": "Low",
-            "recommendation": "Monitor weather patterns and prepare alternative delivery routes."
-        }
-    ]
+# Risk Insights Column
+with col2:
+    st.markdown('<h2 class="section-title">Supply Chain Risk Insights</h2>', unsafe_allow_html=True)
     
-    for risk in risk_insights:
+    # Generate risk insights based on news items
+    for news in news_items:
+        # Use the relevance tags to determine risk level
+        risk_level = "High" if "Risk" in news['relevance_tags'] else \
+                    "Medium" if any(tag in ["Transportation", "Manufacturing"] for tag in news['relevance_tags']) else \
+                    "Low"
+        
+        # Extract affected entity from relevance tags and source
+        affected_categories = [tag for tag in news['relevance_tags'] if tag != "Risk"]
+        affected_entity = f"{news['source']} ({', '.join(affected_categories)})" if affected_categories else news['source']
+        
+        # Generate recommendation based on risk level and tags
+        if risk_level == "High":
+            recommendation = f"Immediate action required: Monitor {', '.join(affected_categories).lower() if affected_categories else 'situation'} and develop contingency plans"
+        elif risk_level == "Medium":
+            recommendation = f"Monitor {', '.join(affected_categories).lower() if affected_categories else 'situation'} closely and prepare alternative solutions"
+        else:
+            recommendation = "Regular monitoring advised, no immediate action required"
+        
+        # Create risk card
         risk_card(
-            event=risk["event"],
-            affected_entity=risk["affected_entity"],
-            impact_level=risk["impact_level"],
-            recommendation=risk["recommendation"]
+            event=news['title'],
+            affected_entity=affected_entity,
+            impact_level=risk_level,
+            recommendation=recommendation
         )
-    
+
+    # Email generation button
     if st.button("Generate Stakeholder Email", type="primary"):
         st.session_state.show_email_modal = True
 
-# Right column - Chatbot
-with right_col:
-    st.markdown('<div class="section-header">Ask Agentic AI</div>', unsafe_allow_html=True)
+# Chat Interface Column
+with col3:
+    st.markdown('<h2 class="section-title">Risk Analysis Chat</h2>', unsafe_allow_html=True)
     chat_ui()
 
-# Show email modal if button was clicked
+# Email Modal
 if st.session_state.show_email_modal:
-    email_modal(generate_email_content(risk_insights))
+    risk_insights = [
+        f"Risk: {news['title']} - Impact Level: {risk_level}"
+        for news in news_items
+    ]
+    email_content = generate_email_content(risk_insights)
+    email_modal(email_content)
 
 # Footer
-st.markdown(f"""
-    <div class="footer">
-        Last updated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
-    </div>
-""", unsafe_allow_html=True) 
+st.markdown('<div class="footer">', unsafe_allow_html=True)
+st.markdown(f'Last updated: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}', unsafe_allow_html=True)
+st.markdown('</div>', unsafe_allow_html=True)
+
+st.markdown('</div>', unsafe_allow_html=True) 
